@@ -2,6 +2,8 @@
 
 Tested on Raspberry Pi 3B+ with Raspbian Bookworm (Debian 12.7) using a USB camera.  No AI accelerator card was used, Coral.AI is under consideration.
 
+Note:  My code is MIT licensed, however some other code may be under different licenses.
+
 
 ### Demo 1
 
