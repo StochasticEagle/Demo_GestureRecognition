@@ -27,6 +27,12 @@ Stats:
 	* 3 to 5 frames per second (640 x 480)
 	* Noticeable lag in processing (~20 seconds, slightly less than the default in Demo 1)
 
+Notes:
+
+	* The performance gain was very slight.  This indicates most of the work is in the AI model processing.
+ 	* The next step should be model refinement.
+  	* There were a lot of errors in the command window, cleaning these up should yield better performance.
+
  
 ### Demo 3
 
