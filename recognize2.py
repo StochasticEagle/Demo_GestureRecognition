@@ -6,6 +6,7 @@
 
 import argparse
 import math
+import numpy as np
 import sys
 import time
 
@@ -23,6 +24,27 @@ mp_drawing_styles = mp.solutions.drawing_styles
 # Global variables to calculate FPS
 COUNTER, FPS = 0, 0
 START_TIME = time.time()
+
+# Global Image Kernel Statics
+g_ikernel  = np.ones((3,3), np.uint8)
+g_ikernel2 = np.ones((5,5), np.uint8)
+
+
+# Hand Pre-isolation
+def apply_hand_filter_detection(frame):
+    img_hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    blurred = cv2.GaussianBlur(img_hsv, (5,5), 0)	#Reduce noise with blur
+    lower_hsv = np.array([0, 0, 32], dtype=np.uint8)		#0,0,188 for bright light
+    upper_hsv = np.array([64, 192, 255], dtype=np.uint8)	#51,128,255 for bright light
+
+    mask = cv2.inRange(img_hsv, lower_hsv, upper_hsv)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, g_ikernel)	# Close small holes
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, g_ikernel2)	# Remove noise
+
+    foreground = cv2.bitwise_and(frame, frame, mask=mask)
+	#foreground = cv2.resize(foreground, (224, 168))
+
+    return foreground
 
 
 def run(model: str, num_hands: int,
@@ -54,7 +76,7 @@ def run(model: str, num_hands: int,
   # Visualization parameters
   row_size = 50  # pixels
   left_margin = 24  # pixels
-  text_color = (0, 0, 0)  # black
+  text_color = (96, 255, 96)  # black
   font_size = 1
   font_thickness = 1
   fps_avg_frame_count = 10
@@ -100,9 +122,12 @@ def run(model: str, num_hands: int,
 
     image = cv2.flip(image, 1)
 
+    image = apply_hand_filter_detection(image)
+
     # Convert the image from BGR to RGB as required by the TFLite model.
     rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_image)
+    resized_img = cv2.resize(rgb_image, (128,96))
+    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=resized_img)
 
     # Run gesture recognizer using the model.
     recognizer.recognize_async(mp_image, time.time_ns() // 1_000_000)
@@ -176,7 +201,7 @@ def run(model: str, num_hands: int,
         cv2.imshow('gesture_recognition', recognition_frame)
 
     # Stop the program if the ESC key is pressed.
-    if cv2.waitKey(1) == 27:
+    if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
   recognizer.close()
@@ -225,12 +250,12 @@ def main():
       '--frameWidth',
       help='Width of frame to capture from camera.',
       required=False,
-      default=800)
+      default=640)
   parser.add_argument(
       '--frameHeight',
       help='Height of frame to capture from camera.',
       required=False,
-      default=600)
+      default=480)
   args = parser.parse_args()
 
   run(args.model, int(args.numHands), args.minHandDetectionConfidence,
