@@ -18,7 +18,9 @@ Stats:
 
 ### Demo 2
 
-Demo of improved AI method:
+Demo of improved AI method using pre-processing for background culling and image masking.  See the images directory for some example development pictures.
+
+![](images/demo2-mask.png "Mask selection of hands based on HSL values")
 
 Stats:
 
